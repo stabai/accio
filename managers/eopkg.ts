@@ -1,11 +1,16 @@
-import { PackageManager, EoPackage } from "../api/package_types.ts";
-import { platform } from "../shell/environment.ts";
-import { checkCommandAvailable, run, runPiped } from "../shell/run.ts";
+import { EoPackage } from '../repository/content.ts';
+import { PackageManager } from '../repository/framework.ts';
+import { platform } from '../shell/environment.ts';
+import { checkCommandAvailable, run, runPiped } from '../shell/run.ts';
+import { multiInstaller } from './index.ts';
 
-const installer = async (pkgs: EoPackage[]) => {
-  const pkgNames = pkgs.map(pkg => pkg.packageName);
-  await run(['sudo', 'eopkg', 'install', ...pkgNames]);
-};
+export function eoPackage(params: Omit<EoPackage, 'type' | 'managed'>): EoPackage {
+  return {
+    type: 'eopkg',
+    managed: true,
+    ...params,
+  };
+}
 
 export const EoPackageManager: PackageManager<EoPackage> = {
   name: 'eopkg',
@@ -32,8 +37,10 @@ export const EoPackageManager: PackageManager<EoPackage> = {
     }
     return false;
   },
-  installPackage: (pkg) => installer([pkg]),
-  installPackages: installer,
+  ...multiInstaller(async (...pkgs: EoPackage[]) => {
+    const pkgNames = pkgs.map((pkg) => pkg.packageName);
+    await run(['sudo', 'eopkg', 'install', ...pkgNames]);
+  }),
 };
 
 export default {

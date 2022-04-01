@@ -1,32 +1,9 @@
-import { PackageManager, BrewPackage } from "../api/package_types.ts";
-import { assertExhaustive } from "../api/util_types.ts";
-import { platform } from "../shell/environment.ts";
-import { checkCommandAvailable, run, tryRunPiped } from "../shell/run.ts";
-
-const installer = async (pkgs: BrewPackage[]) => {
-  const formulaNames = new Array<string>();
-  const caskNames = new Array<string>();
-  for (const pkg of pkgs) {
-    const subType = pkg.subType;
-    switch (subType) {
-      case 'formula':
-        formulaNames.push(pkg.formula);
-        break;
-      case 'cask':
-        caskNames.push(pkg.cask);
-        break;
-      default:
-        assertExhaustive(subType);
-        break;
-    }
-  }
-  if (formulaNames.length > 0) {
-    await run(['brew', 'install', '--formula', ...formulaNames]);
-  }
-  if (caskNames.length > 0) {
-    await run(['brew', 'install', '--cask', ...caskNames]);
-  }
-};
+import { assertExhaustive } from '../api/util_types.ts';
+import { BrewPackage } from '../repository/content.ts';
+import { PackageManager } from '../repository/framework.ts';
+import { platform } from '../shell/environment.ts';
+import { checkCommandAvailable, run, tryRunPiped } from '../shell/run.ts';
+import { multiInstaller } from './index.ts';
 
 export const BrewPackageManager: PackageManager<BrewPackage> = {
   name: 'apt',
@@ -50,8 +27,32 @@ export const BrewPackageManager: PackageManager<BrewPackage> = {
         return assertExhaustive(subType);
     }
   },
-  installPackage: (pkg) => installer([pkg]),
-  installPackages: installer,
+  ...multiInstaller(async (...pkgs: BrewPackage[]) => {
+    const formulaNames = new Array<string>();
+    const caskNames = new Array<string>();
+    for (const pkg of pkgs) {
+      const subType = pkg.subType;
+      switch (subType) {
+        case 'formula':
+          formulaNames.push(pkg.formula);
+          break;
+        case 'cask':
+          caskNames.push(pkg.cask);
+          break;
+        default:
+          assertExhaustive(subType);
+          break;
+      }
+    }
+    if (formulaNames.length > 0) {
+      await run(['brew', 'install', '--formula', ...formulaNames]);
+    }
+    if (caskNames.length > 0) {
+      await run(['brew', 'install', '--cask', ...caskNames]);
+    }
+  }),
+  // installPackage: (pkg) => installer([pkg]),
+  // installPackages: installer,
 };
 
 export default {

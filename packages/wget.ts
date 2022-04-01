@@ -1,24 +1,28 @@
-import { SoftwarePackage } from "../api/package_types.ts";
+import { Software } from '../repository/framework.ts';
 
-export const WgetPackage: SoftwarePackage = {
+export const WgetSoftware: Software = {
+  id: 'wget',
   name: 'Wget',
   commandLineTools: ['wget'],
   sources: [
     {
       type: 'eopkg',
+      managed: true,
       platform: ['linux'],
       packageName: 'wget',
     },
     {
       type: 'apt',
+      managed: true,
       platform: ['linux'],
       packageName: 'wget',
     },
     {
       type: 'brew',
       subType: 'formula',
+      managed: true,
       platform: ['linux', 'darwin'],
       formula: 'wget',
     },
   ],
-}
+};

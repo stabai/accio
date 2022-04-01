@@ -16,14 +16,27 @@ export function assertExhaustive<T>(_obj: never, message?: string): T {
   throw new Error(message ?? 'Non-exhaustive condition');
 }
 
+export async function anyTrue(promises: Promise<boolean | undefined>[]): Promise<boolean> {
+  const racing = promises.map((p) =>
+    p.then((result) => {
+      if (result !== true) {
+        throw new Error('Check failed');
+      } else {
+        return true;
+      }
+    })
+  );
+  try {
+    return await Promise.any(racing);
+  } catch {
+    return false;
+  }
+}
+
 // deno-lint-ignore no-explicit-any
 export type CommandYargs = any;
 // deno-lint-ignore no-explicit-any
 export interface NamedArgs extends Record<string, any> {
   _: string[];
   $0: string;
-}
-
-export function idify(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
 }

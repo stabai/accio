@@ -1,19 +1,20 @@
-import { PackageManager, AptPackage } from "../api/package_types.ts";
-import { platform } from "../shell/environment.ts";
-import { checkCommandAvailable, run, runPiped } from "../shell/run.ts";
+import { AptPackage } from '../repository/content.ts';
+import { UnloadedPackageManager } from '../repository/framework.ts';
+import { platform } from '../shell/environment.ts';
+import { checkCommandAvailable, run, runPiped } from '../shell/run.ts';
+import { multiInstaller } from './index.ts';
 
 let aptUpdated = false;
 
-const installer = async (pkgs: AptPackage[]) => {
-  if (!aptUpdated) {
-    aptUpdated = true;
-    await run(['sudo', 'apt', 'update']);
-  }
-  const pkgNames = pkgs.map(pkg => pkg.packageName);
-  await run(['sudo', 'apt', 'install', ...pkgNames]);
-};
+export function aptPackage(params: Omit<AptPackage, 'type' | 'managed'>): AptPackage {
+  return {
+    type: 'apt',
+    managed: true,
+    ...params,
+  };
+}
 
-export const AptPackageManager: PackageManager<AptPackage> = {
+export const AptPackageManager: UnloadedPackageManager<AptPackage> = {
   name: 'apt',
   getStatus: async () => {
     if (platform.platform !== 'linux') {
@@ -38,8 +39,25 @@ export const AptPackageManager: PackageManager<AptPackage> = {
     }
     return false;
   },
-  installPackage: (pkg) => installer([pkg]),
-  installPackages: installer,
+  ...multiInstaller(async (...pkgs: AptPackage[]) => {
+    if (!aptUpdated) {
+      aptUpdated = true;
+      await run(['sudo', 'apt', 'update']);
+    }
+    const pkgNames = pkgs.map((pkg) => pkg.packageName);
+    await run(['sudo', 'apt', 'install', ...pkgNames]);
+  }),
+  // installPackage: (pkg: AptPackage) => {
+  //   return AptPackageManager.installPackages(pkg);
+  // },
+  // installPackages: async (...pkgs: AptPackage[]) => {
+  //   if (!aptUpdated) {
+  //     aptUpdated = true;
+  //     await run(['sudo', 'apt', 'update']);
+  //   }
+  //   const pkgNames = pkgs.map(pkg => pkg.packageName);
+  //   await run(['sudo', 'apt', 'install', ...pkgNames]);
+  // },
 };
 
 export default {

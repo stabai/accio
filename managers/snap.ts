@@ -1,22 +1,25 @@
-import { SnapPackage, PackageManager, SoftwarePackage } from "../api/package_types.ts";
-import { platform } from "../shell/environment.ts";
-import { checkCommandAvailable, runPiped, tryRunPiped } from "../shell/run.ts";
+import { SnapPackage } from '../repository/content.ts';
+import { PackageManager, Software } from '../repository/framework.ts';
+import { platform } from '../shell/environment.ts';
+import { checkCommandAvailable, runPiped, tryRunPiped } from '../shell/run.ts';
+import { aptPackage } from './apt.ts';
+import { eoPackage } from './eopkg.ts';
+import { multiInstaller } from './index.ts';
 
-export const SnapSoftwarePackage: SoftwarePackage = {
+export const SnapSoftware: Software = {
+  id: 'snap',
   name: 'Snap Package Manager',
   sources: [
-    {
-      type: 'eopkg',
+    eoPackage({
       platform: ['linux'],
       packageName: 'snapd',
       manualPostInstallStep: 'reboot',
-    },
-    {
-      type: 'apt',
+    }),
+    aptPackage({
       platform: ['linux'],
       packageName: 'snapd',
       manualPostInstallStep: 'newDesktopSession',
-    },
+    }),
     // {
     //   type: 'yum',
     //   platform: ['linux'],
@@ -44,17 +47,14 @@ export const SnapPackageManager: PackageManager<SnapPackage> = {
   isPackageInstalled: (pkg) => {
     return tryRunPiped(['snap', 'list', pkg.packageName]);
   },
-  installPackage: async (pkg) => {
-    await runPiped(['snap', 'install', pkg.packageName]);
-  },
-  installPackages: async (pkgs) => {
-    const pkgNames = pkgs.map(pkg => pkg.packageName);
+  ...multiInstaller(async (...pkgs: SnapPackage[]) => {
+    const pkgNames = pkgs.map((pkg) => pkg.packageName);
     await runPiped(['snap', 'install', ...pkgNames]);
-  },
-  installPackageManager: SnapSoftwarePackage,
+  }),
+  installPackageManager: SnapSoftware,
 };
 
 export default {
-  softwarePackages: [SnapSoftwarePackage],
+  softwarePackages: [SnapSoftware],
   packageManagers: [SnapPackageManager],
 };

@@ -1,39 +1,20 @@
-import { Platform, SoftwarePackage } from "../api/package_types.ts";
-import { isInstalledWithPackageManager, isManagedSource } from "../managers/index.ts";
-import { platform } from "../shell/environment.ts";
-import { checkCommandAvailable } from "../shell/run.ts";
-import { BuildEssentialsPackage } from "./build_essentials.ts";
-import { CurlPackage } from "./curl.ts";
-import { GitPackage } from "./git.ts";
-import { KarabinerElementsPackage } from "./karabiner-elements.ts";
-import { TarPackage } from "./tar.ts";
-import { WgetPackage } from "./wget.ts";
+import { Platform } from '../api/environment_types.ts';
+import { SoftwareFilter } from '../api/package_types.ts';
+import { anyTrue } from '../api/util_types.ts';
+import { isInstalledWithPackageManager, isManagedSource } from '../managers/index.ts';
+import { ALL_SOFTWARE, ALL_SOFTWARE_IDS } from '../repository/content.ts';
+import { Software } from '../repository/framework.ts';
+import { platform } from '../shell/environment.ts';
+import { checkCommandAvailable } from '../shell/run.ts';
 
-export const allSoftwarePackages = {
-  build_essentials: BuildEssentialsPackage,
-  curl: CurlPackage,
-  git: GitPackage,
-  karabiner_elements: KarabinerElementsPackage,
-  tar: TarPackage,
-  wget: WgetPackage,
-};
-type SoftwarePackageId = keyof typeof allSoftwarePackages;
-const allSoftwarePackageIds = Object.keys(allSoftwarePackages) as SoftwarePackageId[];
-
-export type SoftwarePackages = typeof allSoftwarePackages;
-export type PackageId = keyof SoftwarePackages;
-
-export const SOFTWARE_FILTERS = ['installable', 'installed', 'uninstalled', 'all'] as const;
-export type SoftwareFilter = typeof SOFTWARE_FILTERS[number];
-
-export async function getSoftware(filter: SoftwareFilter, softwareList?: string[]): Promise<SoftwarePackage[]> {
-  const packages = new Array<SoftwarePackage>();
+export async function getSoftware(filter: SoftwareFilter, softwareList?: string[]): Promise<Software[]> {
+  const packages = new Array<Software>();
   const list = softwareList ?? [];
-  for (const id of allSoftwarePackageIds) {
+  for (const id of ALL_SOFTWARE_IDS) {
     if (list.length > 0 && !list.includes(id)) {
       continue;
     }
-    const pkg = allSoftwarePackages[id];
+    const pkg = ALL_SOFTWARE[id];
     if (await matchesFilter(filter, pkg)) {
       packages.push(pkg);
     }
@@ -56,7 +37,7 @@ export async function getSoftware(filter: SoftwareFilter, softwareList?: string[
 //   }
 // }
 
-export async function isInstalled(pkg: SoftwarePackage): Promise<boolean> {
+export async function isInstalled(pkg: Software): Promise<boolean> {
   const promises = new Array<Promise<boolean | undefined>>();
   if (pkg.installStatusChecker != null) {
     promises.push(pkg.installStatusChecker());
@@ -74,12 +55,12 @@ export async function isInstalled(pkg: SoftwarePackage): Promise<boolean> {
   return await anyTrue(promises);
 }
 
-async function matchesFilter(filter: SoftwareFilter, pkg: SoftwarePackage): Promise<boolean> {
+async function matchesFilter(filter: SoftwareFilter, software: Software): Promise<boolean> {
   switch (filter) {
     case 'all':
       return true;
     case 'installable':
-      for (const src of pkg.sources) {
+      for (const src of software.sources) {
         const platforms = src.platform as Platform[];
         if (platforms.includes(platform.platform)) {
           return true;
@@ -87,23 +68,8 @@ async function matchesFilter(filter: SoftwareFilter, pkg: SoftwarePackage): Prom
       }
       return false;
     case 'installed':
-      return await isInstalled(pkg);
+      return await isInstalled(software);
     case 'uninstalled':
-      return !(await isInstalled(pkg));
-  }
-}
-
-async function anyTrue(promises: Promise<boolean | undefined>[]): Promise<boolean> {
-  const racing = promises.map(p => p.then(result => {
-    if (result !== true) {
-      throw new Error('Check failed');
-    } else {
-      return true;
-    }
-  }));
-  try {
-    return await Promise.any(racing);
-  } catch {
-    return false;
+      return !(await isInstalled(software));
   }
 }

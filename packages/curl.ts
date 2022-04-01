@@ -1,24 +1,28 @@
-import { SoftwarePackage } from "../api/package_types.ts";
+import { Software } from '../repository/framework.ts';
 
-export const CurlPackage: SoftwarePackage = {
+export const CurlSoftware: Software = {
+  id: 'curl',
   name: 'Curl',
   commandLineTools: ['curl'],
   sources: [
     {
       type: 'eopkg',
+      managed: true,
       platform: ['linux'],
       packageName: 'curl',
     },
     {
       type: 'apt',
+      managed: true,
       platform: ['linux'],
       packageName: 'curl',
     },
     {
       type: 'brew',
       subType: 'formula',
+      managed: true,
       platform: ['linux', 'darwin'],
       formula: 'curl',
     },
   ],
-}
+};

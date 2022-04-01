@@ -1,13 +1,13 @@
 import { join } from 'https://deno.land/std@0.128.0/path/mod.ts';
-import os from 'https://deno.land/x/dos@v0.11.0/mod.ts';
-
-import { PlatformInfo } from "../api/package_types.ts";
+import dir from 'https://deno.land/x/dir@v1.2.0/mod.ts';
+import { EOL } from 'https://deno.land/std@0.132.0/fs/eol.ts';
+import { PlatformInfo } from '../api/environment_types.ts';
 
 export const platform: PlatformInfo = {
   platform: Deno.build.os,
-  homeDir: os.homeDir()!,
-  downloadDir: join(os.homeDir()!, 'Downloads'),
-  eol: Deno.build.os === 'windows' ? '\r\n' : '\n',
+  homeDir: dir('home')!,
+  downloadDir: dir('download')!,
+  eol: Deno.build.os === 'windows' ? EOL.CRLF : EOL.LF,
 };
 
 export function expandPath(path: string) {

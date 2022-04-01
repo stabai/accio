@@ -1,12 +1,13 @@
 #!/usr/bin/env -S deno run --allow-all --allow-run --allow-env --unstable
 
 import yargs from 'https://deno.land/x/yargs@v17.3.1-deno/deno.ts';
-import { runInstall } from "./accio-install.ts";
-import { CommandYargs, idify, NamedArgs } from "./api/util_types.ts";
-import { getSoftware, SOFTWARE_FILTERS } from "./packages/index.ts";
-import { platform } from "./shell/environment.ts";
-import { Table } from "./ui/table.ts";
-import { APP_VERSION } from "./version.ts";
+import { runInstall } from './accio-install.ts';
+import { SOFTWARE_FILTERS } from './api/package_types.ts';
+import { CommandYargs, NamedArgs } from './api/util_types.ts';
+import { getSoftware } from './packages/index.ts';
+import { platform } from './shell/environment.ts';
+import { Table } from './ui/table.ts';
+import { APP_VERSION } from './version.ts';
 
 const VERSION_INFO = summarizeVersion(APP_VERSION);
 
@@ -28,14 +29,14 @@ yargs(Deno.args)
     const software = await getSoftware(argv.filter, argv.software);
     const table = new Table()
       .heading('ID', 'Name')
-      .rows(...software.map(s => [idify(s.name), s.name]));
+      .rows(...software.map((s) => [s.id, s.name]));
     console.log(table.render());
   })
   .command('diagnose', 'Shows diagnostic information for debugging.', () => {
     const parts = [VERSION_INFO];
     for (const key of Object.keys(Deno.build)) {
       const value = Deno.build[key as keyof typeof Deno.build];
-      parts.push(`${key} ${value}`)
+      parts.push(`${key} ${value}`);
     }
     console.log(parts.join(platform.eol));
   })
@@ -67,7 +68,6 @@ yargs(Deno.args)
   .demandCommand()
   .version(VERSION_INFO)
   .parse();
-
 
 function summarizeVersion(appVersion: string): string {
   const parts = [`accio ${appVersion}`];
