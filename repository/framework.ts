@@ -103,3 +103,21 @@ export interface InstallSource<T extends BasePackageSource> {
   isPackageInstalled?: (pkg: T) => Promise<boolean>;
   installPackage: (pkg: T) => Promise<void>;
 }
+
+export type SoftwarePackageGroupings = Partial<Record<PackageType, SoftwarePackage[]>>;
+
+export function groupSoftwarePackageChoices(packageChoices: SoftwarePackageChoice[]): SoftwarePackageGroupings {
+  const groupings: Partial<Record<PackageType, SoftwarePackage[]>> = {};
+  for (const choice of packageChoices) {
+    if (choice.package == null) {
+      continue;
+    }
+    let packages = groupings[choice.package.type];
+    if (packages == null) {
+      packages = [];
+      groupings[choice.package.type] = packages;
+    }
+    packages.push(choice.package);
+  }
+  return groupings;
+}

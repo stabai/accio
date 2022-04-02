@@ -2,7 +2,7 @@ import { cyan, magenta, red, yellow } from 'https://deno.land/std@0.133.0/fmt/co
 import { ManualPostInstallStep } from './api/package_types.ts';
 
 import { chooseInstallPackage, getSoftware, isInstalled } from './packages/index.ts';
-import { getPackageTypeName, SoftwarePackageChoice } from './repository/framework.ts';
+import { getPackageTypeName, groupSoftwarePackageChoices, SoftwarePackageChoice } from './repository/framework.ts';
 import { platform } from './shell/environment.ts';
 import { CellContent, Table } from './ui/table.ts';
 
@@ -85,8 +85,9 @@ export async function runInstall(options: InstallOptions): Promise<number | void
 
     console.log();
     if (confirm('Proceed with installation?')) {
+      const groupings = groupSoftwarePackageChoices(installChoices);
       // TODO(stabai): Group packages and run actual installations
-      console.log('now!');
+      console.log('now!', groupings);
     }
   }
 }
