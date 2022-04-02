@@ -4,9 +4,10 @@ import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable, run, runPiped } from '../shell/run.ts';
 import { multiInstaller } from './index.ts';
 
-export function eoPackage(params: Omit<EoPackage, 'type' | 'managed'>): EoPackage {
+export function eoPackage(params: Omit<EoPackage, 'type' | 'platform' | 'managed'>): EoPackage {
   return {
     type: 'eopkg',
+    platform: ['linux'],
     managed: true,
     ...params,
   };

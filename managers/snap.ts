@@ -11,14 +11,12 @@ export const SnapSoftware: Software = {
   name: 'Snap Package Manager',
   sources: [
     eoPackage({
-      platform: ['linux'],
       packageName: 'snapd',
       manualPostInstallStep: 'reboot',
     }),
     aptPackage({
-      platform: ['linux'],
       packageName: 'snapd',
-      manualPostInstallStep: 'newDesktopSession',
+      manualPostInstallStep: 'logout',
     }),
     // {
     //   type: 'yum',

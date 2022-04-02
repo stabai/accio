@@ -1,25 +1,40 @@
 import { Platform } from '../api/environment_types.ts';
 import { SoftwareFilter } from '../api/package_types.ts';
 import { anyTrue } from '../api/util_types.ts';
-import { isInstalledWithPackageManager, isManagedSource } from '../managers/index.ts';
-import { ALL_SOFTWARE, ALL_SOFTWARE_IDS } from '../repository/content.ts';
-import { Software } from '../repository/framework.ts';
+import { isInstalledWithPackageManager, isManagedSource, packageManagers } from '../managers/index.ts';
+import { ALL_SOFTWARE, ALL_SOFTWARE_IDS, SoftwareId } from '../repository/content.ts';
+import { Software, SoftwarePackage, SoftwarePackageChoice } from '../repository/framework.ts';
 import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable } from '../shell/run.ts';
 
 export async function getSoftware(filter: SoftwareFilter, softwareList?: string[]): Promise<Software[]> {
   const packages = new Array<Software>();
-  const list = softwareList ?? [];
-  for (const id of ALL_SOFTWARE_IDS) {
-    if (list.length > 0 && !list.includes(id)) {
-      continue;
-    }
+  const softwareIds = (softwareList ?? ALL_SOFTWARE_IDS) as SoftwareId[];
+  for (const id of softwareIds) {
     const pkg = ALL_SOFTWARE[id];
     if (await matchesFilter(filter, pkg)) {
       packages.push(pkg);
     }
   }
   return packages;
+}
+
+export function chooseInstallPackage(software: Software): SoftwarePackageChoice {
+  let backup: SoftwarePackage | undefined;
+  for (const pkg of software.sources) {
+    if (!pkg.platform.includes(platform.platform)) {
+      continue;
+    }
+    const mgr = packageManagers[pkg.type];
+    if (mgr.status !== 'ready') {
+      continue;
+    } else if (isManagedSource(pkg)) {
+      return { software, package: pkg };
+    } else if (backup == null) {
+      backup = pkg;
+    }
+  }
+  return { software, package: backup };
 }
 
 // export async function install(pkg: SoftwarePackage): Promise<void> {

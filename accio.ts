@@ -28,7 +28,7 @@ yargs(Deno.args)
   }, async (argv: NamedArgs) => {
     const software = await getSoftware(argv.filter, argv.software);
     const table = new Table()
-      .heading('ID', 'Name')
+      .header('ID', 'Name')
       .rows(...software.map((s) => [s.id, s.name]));
     console.log(table.render());
   })

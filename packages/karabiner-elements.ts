@@ -1,15 +1,10 @@
 import { Software } from '../repository/framework.ts';
+import { brewCask } from '../managers/brew.ts';
 
 export const KarabinerElementsSoftware: Software = {
   id: 'karabiner_elements',
   name: 'Karabiner-Elements',
   sources: [
-    {
-      type: 'brew',
-      subType: 'cask',
-      managed: true,
-      platform: ['darwin'],
-      cask: 'karabiner-elements',
-    },
+    brewCask({cask: 'karabiner-elements'}),
   ],
 };

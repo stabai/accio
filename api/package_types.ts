@@ -3,4 +3,4 @@ export type SoftwareFilter = typeof SOFTWARE_FILTERS[number];
 
 export type PackageManagerStatus = 'ready' | 'uninstalled' | 'unsupported';
 
-export type ManualPostInstallStep = 'newTerminalSession' | 'newDesktopSession' | 'reboot';
+export type ManualPostInstallStep = 'new terminal session' | 'logout' | 'reboot';

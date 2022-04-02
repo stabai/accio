@@ -1,3 +1,5 @@
+import { aptPackage } from '../managers/apt.ts';
+import { eoPackage } from '../managers/eopkg.ts';
 import { Software } from '../repository/framework.ts';
 
 export const BuildEssentialsSoftware: Software = {
@@ -5,18 +7,10 @@ export const BuildEssentialsSoftware: Software = {
   name: 'Build Essentials',
   commandLineTools: ['gcc'],
   sources: [
-    {
-      type: 'eopkg',
-      managed: true,
-      platform: ['linux'],
+    eoPackage({
       component: true,
       packageName: 'system.devel',
-    },
-    {
-      type: 'apt',
-      managed: true,
-      platform: ['linux'],
-      packageName: 'build-essentials',
-    },
+    }),
+    aptPackage({ packageName: 'build-essentials' }),
   ],
 };

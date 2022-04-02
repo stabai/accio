@@ -1,3 +1,6 @@
+import { aptPackage } from '../managers/apt.ts';
+import { brewFormula } from '../managers/brew.ts';
+import { eoPackage } from '../managers/eopkg.ts';
 import { Software } from '../repository/framework.ts';
 
 export const WgetSoftware: Software = {
@@ -5,24 +8,11 @@ export const WgetSoftware: Software = {
   name: 'Wget',
   commandLineTools: ['wget'],
   sources: [
-    {
-      type: 'eopkg',
-      managed: true,
-      platform: ['linux'],
-      packageName: 'wget',
-    },
-    {
-      type: 'apt',
-      managed: true,
-      platform: ['linux'],
-      packageName: 'wget',
-    },
-    {
-      type: 'brew',
-      subType: 'formula',
-      managed: true,
+    eoPackage({ packageName: 'wget' }),
+    aptPackage({ packageName: 'wget' }),
+    brewFormula({
       platform: ['linux', 'darwin'],
       formula: 'wget',
-    },
+    }),
   ],
 };

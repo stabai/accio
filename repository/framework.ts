@@ -75,6 +75,19 @@ export interface BasePackageSource {
   manualPostInstallStep?: ManualPostInstallStep;
 }
 
+export interface SoftwarePackageChoice {
+  software: Software;
+  package: SoftwarePackage | undefined;
+}
+
+export function getPackageTypeName(pkg: SoftwarePackage): string {
+  if ('subType' in pkg && pkg.subType != null) {
+    return [pkg.type, pkg.subType].join(' ');
+  } else {
+    return pkg.type;
+  }
+}
+
 export interface GenericPackage<T extends PackageType> extends BasePackageSource {
   type: T;
   subType?: never;

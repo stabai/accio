@@ -6,9 +6,10 @@ import { multiInstaller } from './index.ts';
 
 let aptUpdated = false;
 
-export function aptPackage(params: Omit<AptPackage, 'type' | 'managed'>): AptPackage {
+export function aptPackage(params: Omit<AptPackage, 'type' | 'platform' | 'managed'>): AptPackage {
   return {
     type: 'apt',
+    platform: ['linux'],
     managed: true,
     ...params,
   };

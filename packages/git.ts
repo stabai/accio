@@ -1,3 +1,6 @@
+import { aptPackage } from '../managers/apt.ts';
+import { brewFormula } from '../managers/brew.ts';
+import { eoPackage } from '../managers/eopkg.ts';
 import { Software } from '../repository/framework.ts';
 
 export const GitSoftware: Software = {
@@ -5,24 +8,11 @@ export const GitSoftware: Software = {
   name: 'Git',
   commandLineTools: ['git'],
   sources: [
-    {
-      type: 'eopkg',
-      managed: true,
-      platform: ['linux'],
-      packageName: 'git',
-    },
-    {
-      type: 'apt',
-      managed: true,
-      platform: ['linux'],
-      packageName: 'git',
-    },
-    {
-      type: 'brew',
-      subType: 'formula',
-      managed: true,
+    eoPackage({ packageName: 'git' }),
+    aptPackage({ packageName: 'git' }),
+    brewFormula({
       platform: ['linux', 'darwin'],
       formula: 'git',
-    },
+    }),
   ],
 };

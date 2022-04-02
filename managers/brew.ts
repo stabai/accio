@@ -1,9 +1,27 @@
 import { assertExhaustive } from '../api/util_types.ts';
-import { BrewPackage } from '../repository/content.ts';
+import { BrewCask, BrewFormula, BrewPackage } from '../repository/content.ts';
 import { PackageManager } from '../repository/framework.ts';
 import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable, run, tryRunPiped } from '../shell/run.ts';
 import { multiInstaller } from './index.ts';
+
+export function brewFormula(params: Omit<BrewFormula, 'type' | 'subType' | 'managed'>): BrewFormula {
+  return {
+    type: 'brew',
+    subType: 'formula',
+    managed: true,
+    ...params,
+  };
+}
+export function brewCask(params: Omit<BrewCask, 'type' | 'subType' | 'managed' | 'platform'>): BrewCask {
+  return {
+    type: 'brew',
+    subType: 'cask',
+    managed: true,
+    platform: ['darwin'],
+    ...params,
+  };
+}
 
 export const BrewPackageManager: PackageManager<BrewPackage> = {
   name: 'apt',

@@ -6,9 +6,8 @@ import { GitSoftware } from '../packages/git.ts';
 import { KarabinerElementsSoftware } from '../packages/karabiner-elements.ts';
 import { TarSoftware } from '../packages/tar.ts';
 import { WgetSoftware } from '../packages/wget.ts';
-import { BasePackageSource, GenericPackage, InstallScript, InstallSource } from './framework.ts';
+import { BasePackageSource, GenericPackage, InstallScript, InstallSource, LoadedPackageManager } from './framework.ts';
 
-// TODO(stabai): Change all of these from SoftwarePackage to something else (these are pieces of software, not the packages we intall them with)
 export const ALL_SOFTWARE = {
   build_essentials: BuildEssentialsSoftware,
   curl: CurlSoftware,
@@ -100,7 +99,9 @@ export interface BrewCask extends BasePackageSource {
   platform: ['darwin'];
   cask: string;
 }
-export type BrewPackage = (BrewFormula | BrewCask);
+export type BrewPackage = (BrewFormula | BrewCask) & {
+  platform: Platform[];
+};
 
 export interface ThirdPartyEopkg extends BasePackageSource {
   type: 'eopkg';
