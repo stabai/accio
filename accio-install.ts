@@ -120,7 +120,7 @@ function summarizeInstall(
   let actionSummary = new Table({ rows: tableRows }).header('Software', 'Package Source').render();
   if (manualPostInstallStep != null) {
     actionSummary += platform.eol + yellow(`⏸️  A ${manualPostInstallStep} will be required to complete installation.`);
-    actionSummary += platform.eol + yellow(`⏸️  Rerun this installation after completing it.`);
+    actionSummary += platform.eol + yellow(`   Rerun this installation after completing it.`);
   }
   return [actionSummary, errors];
 }
