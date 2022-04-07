@@ -1,9 +1,26 @@
+import { Platform } from '../api/environment_types.ts';
+import { MultiInstallPackageManager, PackageManagerStatus, SoftwarePackage } from '../api/package_types.ts';
 import { assertExhaustive } from '../api/util_types.ts';
-import { BrewCask, BrewFormula, BrewPackage } from '../repository/content.ts';
-import { PackageManager } from '../repository/framework.ts';
 import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable, run, tryRunPiped } from '../shell/run.ts';
-import { multiInstaller } from './index.ts';
+
+export interface BrewFormula extends SoftwarePackage<'brew'> {
+  type: 'brew';
+  subType: 'formula';
+  managed: true;
+  platform: Platform[];
+  formula: string;
+}
+export interface BrewCask extends SoftwarePackage<'brew'> {
+  type: 'brew';
+  subType: 'cask';
+  managed: true;
+  platform: ['darwin'];
+  cask: string;
+}
+export type BrewPackage = (BrewFormula | BrewCask) & {
+  platform: Platform[];
+};
 
 export function brewFormula(params: Omit<BrewFormula, 'type' | 'subType' | 'managed'>): BrewFormula {
   return {
@@ -23,9 +40,10 @@ export function brewCask(params: Omit<BrewCask, 'type' | 'subType' | 'managed' |
   };
 }
 
-export const BrewPackageManager: PackageManager<BrewPackage> = {
-  name: 'apt',
-  getStatus: async () => {
+export class BrewPackageManager extends MultiInstallPackageManager<'brew', BrewPackage> {
+  override readonly name = 'brew';
+
+  protected override async checkStatus(): Promise<PackageManagerStatus> {
     if (platform.platform !== 'linux') {
       return 'unsupported';
     } else if (await checkCommandAvailable('apt')) {
@@ -33,8 +51,9 @@ export const BrewPackageManager: PackageManager<BrewPackage> = {
     } else {
       return 'uninstalled';
     }
-  },
-  isPackageInstalled: async (pkg) => {
+  }
+
+  override async isPackageInstalled(pkg: BrewPackage): Promise<boolean> {
     const subType = pkg.subType;
     switch (subType) {
       case 'formula':
@@ -44,8 +63,9 @@ export const BrewPackageManager: PackageManager<BrewPackage> = {
       default:
         return assertExhaustive(subType);
     }
-  },
-  ...multiInstaller(async (...pkgs: BrewPackage[]) => {
+  }
+
+  override async installPackages(...pkgs: BrewPackage[]) {
     const formulaNames = new Array<string>();
     const caskNames = new Array<string>();
     for (const pkg of pkgs) {
@@ -68,12 +88,5 @@ export const BrewPackageManager: PackageManager<BrewPackage> = {
     if (caskNames.length > 0) {
       await run(['brew', 'install', '--cask', ...caskNames]);
     }
-  }),
-  // installPackage: (pkg) => installer([pkg]),
-  // installPackages: installer,
-};
-
-export default {
-  softwarePackages: [],
-  packageManagers: [BrewPackageManager],
-};
+  }
+}

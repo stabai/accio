@@ -1,86 +1,103 @@
-import { awaitRecord, PromiseRecord } from '../api/util_types.ts';
-import { PackageManagers, TarballPackage } from '../repository/content.ts';
 import {
-  InstallScript,
-  InstallSource,
-  loadPackageManager,
-  ManagedPackage,
+  ALL_PACKAGE_TYPES,
+  PackageManager,
+  PackageManagerCatalog,
+  PackageType,
+  Software,
   SoftwarePackage,
-} from '../repository/framework.ts';
-import { checkCommandAvailable } from '../shell/run.ts';
+  SoftwarePackageChoice,
+} from '../api/package_types.ts';
+import { platform } from '../shell/environment.ts';
 import { AptPackageManager } from './apt.ts';
 import { BrewPackageManager } from './brew.ts';
 import { EoPackageManager } from './eopkg.ts';
+import { ScriptInstaller } from './script.ts';
 import { SnapPackageManager } from './snap.ts';
+import { TarballInstaller } from './tarball.ts';
 
-export const packageManagers = await getPackageManagers();
+const packageManagers: PackageManagerCatalog = {
+  script: new ScriptInstaller(),
+  tarball: new TarballInstaller(),
 
-export function isManagedSource(src: SoftwarePackage): src is ManagedPackage {
-  return src.managed;
+  apt: new AptPackageManager(),
+  brew: new BrewPackageManager(),
+  snap: new SnapPackageManager(),
+  eopkg: new EoPackageManager(),
+  // TODO(stabai):
+  // dpkg: InstallSource<DebPackage>;
+  // gem: InstallSource<GemPackage>;
+  // go: InstallSource<GoPackage>;
+  // flatpak: InstallSource<FlatpakPackage>;
+  // macports: InstallSource<MacportsPackage>;
+  // pacman: InstallSource<PacmanPackage>;
+  // npm: InstallSource<NpmPackage>;
+  // rpm: InstallSource<RpmPackage>;
+  // yum: InstallSource<YumPackage>;
+  // cargo: InstallSource<DnfPackage>;
+  // dnf: InstallSource<DnfPackage>;
+  // git: InstallSource<GitPackage>;
+  // pip: InstallSource<DnfPackage>;
+  // zypper: InstallSource<ZypperPackage>;
+  // If adding Windows:
+  // choco: InstallSource<ChocoPackage>;
+  // nuget: InstallSource<NuGetPackage>;
+  // winget: InstallSource<WinGetPackage>;
+};
+
+export const ALL_PACKAGE_MANAGERS: PackageManagerCatalog = await loadPackageManagers(packageManagers);
+
+export function isPackageType(value: string): value is PackageType {
+  return (ALL_PACKAGE_TYPES as readonly string[]).includes(value);
 }
 
-function scriptInstaller(): Promise<InstallSource<InstallScript>> {
-  return Promise.resolve({
-    name: 'Script',
-    status: 'ready',
-    installPackage: function (pkg: InstallScript): Promise<void> {
-      switch (pkg.subType) {
-        case 'local':
-          return pkg.install();
-        case 'remote':
-          // TODO(stabai)
-          // download pkg.scriptUrl
-          // set execution bit
-          // execute pkg.install
-          throw new Error('Remote scripts not implemented.');
-      }
-    },
-  });
-}
-async function tarballInstaller(): Promise<InstallSource<TarballPackage>> {
-  const tarInstalled = await checkCommandAvailable('tar');
-  const status = tarInstalled ? 'ready' : 'uninstalled';
-  return {
-    name: 'Tarball',
-    status,
-    installPackage: function (pkg: TarballPackage): Promise<void> {
-      throw new Error('Function not implemented.');
-    },
-  };
+export function getPackageManager<T extends PackageType>(packageType: T): PackageManager<T> {
+  return ALL_PACKAGE_MANAGERS[packageType];
 }
 
-function getPackageManagers(): Promise<PackageManagers> {
-  const promises: PromiseRecord<PackageManagers> = {
-    script: scriptInstaller(),
-    tarball: tarballInstaller(),
-
-    apt: loadPackageManager(AptPackageManager),
-    brew: loadPackageManager(BrewPackageManager),
-    snap: loadPackageManager(SnapPackageManager),
-    eopkg: loadPackageManager(EoPackageManager),
-  };
-  return awaitRecord(promises);
+async function loadPackageManagers(catalog: PackageManagerCatalog): Promise<PackageManagerCatalog> {
+  const promises: Promise<unknown>[] = [];
+  for (const packageType of ALL_PACKAGE_TYPES) {
+    const mgr = catalog[packageType];
+    promises.push(mgr.determineStatus());
+  }
+  await Promise.allSettled(promises);
+  return catalog;
 }
 
-export async function isInstalledWithPackageManager<T extends ManagedPackage>(src: T): Promise<boolean> {
-  const mgr = packageManagers[src.type] as InstallSource<T>;
+export async function isInstalledWithPackageManager<T extends PackageType>(src: SoftwarePackage<T>): Promise<boolean> {
+  const mgr = getPackageManager(src.type);
   if (mgr.status !== 'ready' || mgr.isPackageInstalled == null) {
     return false;
   } else {
     const result = await mgr.isPackageInstalled(src);
-    return result;
+    return result ?? false;
   }
 }
 
-interface MultiInstaller<T extends SoftwarePackage> {
-  installPackage(pkg: T): Promise<void>;
-  installPackages(...pkg: T[]): Promise<void>;
+export function supportsMultiInstall<T extends PackageType>(packageType: T): boolean {
+  const mgr = getPackageManager(packageType);
+  return mgr.installPackages != null;
 }
-export function multiInstaller<T extends SoftwarePackage>(
-  installer: (...pkgs: T[]) => Promise<void>,
-): MultiInstaller<T> {
-  return {
-    installPackage: installer,
-    installPackages: installer,
-  };
+
+export function supportsPackageCheck<T extends PackageType>(packageType: T): boolean {
+  const mgr = getPackageManager(packageType);
+  return mgr.isPackageInstalled != null;
+}
+
+export function chooseInstallPackage(software: Software): SoftwarePackageChoice {
+  let backup: SoftwarePackage | undefined;
+  for (const pkg of software.sources) {
+    if (!pkg.platform.includes(platform.platform)) {
+      continue;
+    }
+    const mgr = getPackageManager(pkg.type);
+    if (mgr.status !== 'ready') {
+      continue;
+    } else if (pkg.managed && supportsMultiInstall(pkg.type)) {
+      return { software, package: pkg };
+    } else if (backup == null) {
+      backup = pkg;
+    }
+  }
+  return { software, package: backup };
 }

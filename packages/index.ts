@@ -1,11 +1,26 @@
 import { Platform } from '../api/environment_types.ts';
-import { SoftwareFilter } from '../api/package_types.ts';
+import { ALL_SOFTWARE_IDS, Software, SoftwareCatalog, SoftwareFilter, SoftwareId } from '../api/package_types.ts';
 import { anyTrue } from '../api/util_types.ts';
-import { isInstalledWithPackageManager, isManagedSource, packageManagers } from '../managers/index.ts';
-import { ALL_SOFTWARE, ALL_SOFTWARE_IDS, SoftwareId } from '../repository/content.ts';
-import { Software, SoftwarePackage, SoftwarePackageChoice } from '../repository/framework.ts';
+import { isInstalledWithPackageManager } from '../managers/index.ts';
+import { SnapSoftware } from '../managers/snap.ts';
 import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable } from '../shell/run.ts';
+import { BuildEssentialsSoftware } from './build_essentials.ts';
+import { CurlSoftware } from './curl.ts';
+import { GitSoftware } from './git.ts';
+import { KarabinerElementsSoftware } from './karabiner_elements.ts';
+import { TarSoftware } from './tar.ts';
+import { WgetSoftware } from './wget.ts';
+
+export const ALL_SOFTWARE: SoftwareCatalog = {
+  build_essentials: BuildEssentialsSoftware,
+  curl: CurlSoftware,
+  git: GitSoftware,
+  karabiner_elements: KarabinerElementsSoftware,
+  snap: SnapSoftware,
+  tar: TarSoftware,
+  wget: WgetSoftware,
+} as const;
 
 export async function getSoftware(filter: SoftwareFilter, softwareList?: string[]): Promise<Software[]> {
   const packages = new Array<Software>();
@@ -19,53 +34,18 @@ export async function getSoftware(filter: SoftwareFilter, softwareList?: string[
   return packages;
 }
 
-export function chooseInstallPackage(software: Software): SoftwarePackageChoice {
-  let backup: SoftwarePackage | undefined;
-  for (const pkg of software.sources) {
-    if (!pkg.platform.includes(platform.platform)) {
-      continue;
-    }
-    const mgr = packageManagers[pkg.type];
-    if (mgr.status !== 'ready') {
-      continue;
-    } else if (isManagedSource(pkg)) {
-      return { software, package: pkg };
-    } else if (backup == null) {
-      backup = pkg;
-    }
-  }
-  return { software, package: backup };
-}
-
-// export async function install(pkg: SoftwarePackage): Promise<void> {
-//   for (const src of pkg.sources) {
-//     if (!isManagedSource(src)) {
-//     } else {
-//       const mgr = packageManagers[src.type];
-//       if (mgr.status === 'ready') {
-//         const srcName = [src.type, src.subType].filter(x => x != null).join(' ');
-//         console.log(`Installing ${pkg.name} via ${srcName}...`);
-//         await mgr.installPackage(src);
-//         console.log(`${pkg.name} installed successfully.`);
-//       }
-//     }
-//   }
-// }
-
-export async function isInstalled(pkg: Software): Promise<boolean> {
+export async function isInstalled(software: Software): Promise<boolean> {
   const promises = new Array<Promise<boolean | undefined>>();
-  if (pkg.installStatusChecker != null) {
-    promises.push(pkg.installStatusChecker());
+  if (software.installStatusChecker != null) {
+    promises.push(software.installStatusChecker());
   }
-  if (pkg.commandLineTools != null) {
-    for (const tool of pkg.commandLineTools) {
+  if (software.commandLineTools != null) {
+    for (const tool of software.commandLineTools) {
       promises.push(checkCommandAvailable(tool));
     }
   }
-  for (const src of pkg.sources) {
-    if (isManagedSource(src)) {
-      promises.push(isInstalledWithPackageManager(src));
-    }
+  for (const pkg of software.sources) {
+    promises.push(isInstalledWithPackageManager(pkg));
   }
   return await anyTrue(promises);
 }

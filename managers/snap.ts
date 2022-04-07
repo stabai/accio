@@ -1,10 +1,13 @@
-import { SnapPackage } from '../repository/content.ts';
-import { PackageManager, Software } from '../repository/framework.ts';
+import {
+  MultiInstallPackageManager,
+  PackageManagerStatus,
+  SimpleManagedPackage,
+  Software,
+} from '../api/package_types.ts';
 import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable, runPiped, tryRunPiped } from '../shell/run.ts';
 import { aptPackage } from './apt.ts';
 import { eoPackage } from './eopkg.ts';
-import { multiInstaller } from './index.ts';
 
 export const SnapSoftware: Software = {
   id: 'snap',
@@ -31,9 +34,13 @@ export const SnapSoftware: Software = {
   ],
 };
 
-export const SnapPackageManager: PackageManager<SnapPackage> = {
-  name: 'snap',
-  getStatus: async () => {
+export type SnapPackage = SimpleManagedPackage<'snap'>;
+
+export class SnapPackageManager extends MultiInstallPackageManager<'snap', SnapPackage> {
+  override readonly name = 'snap';
+  override readonly installPackageManager = SnapSoftware;
+
+  protected override async checkStatus(): Promise<PackageManagerStatus> {
     if (platform.platform !== 'linux') {
       return 'unsupported';
     } else if (await checkCommandAvailable('snap')) {
@@ -41,18 +48,14 @@ export const SnapPackageManager: PackageManager<SnapPackage> = {
     } else {
       return 'uninstalled';
     }
-  },
-  isPackageInstalled: (pkg) => {
+  }
+
+  override isPackageInstalled(pkg: SnapPackage): Promise<boolean> {
     return tryRunPiped(['snap', 'list', pkg.packageName]);
-  },
-  ...multiInstaller(async (...pkgs: SnapPackage[]) => {
+  }
+
+  override async installPackages(...pkgs: SnapPackage[]): Promise<void> {
     const pkgNames = pkgs.map((pkg) => pkg.packageName);
     await runPiped(['snap', 'install', ...pkgNames]);
-  }),
-  installPackageManager: SnapSoftware,
-};
-
-export default {
-  softwarePackages: [SnapSoftware],
-  packageManagers: [SnapPackageManager],
-};
+  }
+}

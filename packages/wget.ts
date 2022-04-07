@@ -1,7 +1,7 @@
+import { Software } from '../api/package_types.ts';
 import { aptPackage } from '../managers/apt.ts';
 import { brewFormula } from '../managers/brew.ts';
 import { eoPackage } from '../managers/eopkg.ts';
-import { Software } from '../repository/framework.ts';
 
 export const WgetSoftware: Software = {
   id: 'wget',

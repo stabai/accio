@@ -1,10 +1,10 @@
-import { AptPackage } from '../repository/content.ts';
-import { UnloadedPackageManager } from '../repository/framework.ts';
+import { MultiInstallPackageManager, PackageManagerStatus, SimpleManagedPackage } from '../api/package_types.ts';
 import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable, run, runPiped } from '../shell/run.ts';
-import { multiInstaller } from './index.ts';
 
 let aptUpdated = false;
+
+export type AptPackage = SimpleManagedPackage<'apt'>;
 
 export function aptPackage(params: Omit<AptPackage, 'type' | 'platform' | 'managed'>): AptPackage {
   return {
@@ -15,9 +15,10 @@ export function aptPackage(params: Omit<AptPackage, 'type' | 'platform' | 'manag
   };
 }
 
-export const AptPackageManager: UnloadedPackageManager<AptPackage> = {
-  name: 'apt',
-  getStatus: async () => {
+export class AptPackageManager extends MultiInstallPackageManager<'apt', AptPackage> {
+  override readonly name = 'apt';
+
+  protected override async checkStatus(): Promise<PackageManagerStatus> {
     if (platform.platform !== 'linux') {
       return 'unsupported';
     } else if (await checkCommandAvailable('apt')) {
@@ -25,43 +26,30 @@ export const AptPackageManager: UnloadedPackageManager<AptPackage> = {
     } else {
       return 'uninstalled';
     }
-  },
-  isPackageInstalled: async (pkg) => {
-    try {
-      const result = await runPiped(['apt', '--installed', 'list', pkg.packageName]);
-      const outputPrefix = pkg + '/';
-      for (const line of result.stdout.split(platform.eol)) {
-        if (line.startsWith(outputPrefix)) {
-          return true;
-        }
-      }
-    } catch (_) {
-      // Fall through and return false to indicate installation could not be verified.
-    }
-    return false;
-  },
-  ...multiInstaller(async (...pkgs: AptPackage[]) => {
+  }
+
+  override async installPackages(...pkgs: AptPackage[]): Promise<void> {
     if (!aptUpdated) {
       aptUpdated = true;
       await run(['sudo', 'apt', 'update']);
     }
     const pkgNames = pkgs.map((pkg) => pkg.packageName);
     await run(['sudo', 'apt', 'install', ...pkgNames]);
-  }),
-  // installPackage: (pkg: AptPackage) => {
-  //   return AptPackageManager.installPackages(pkg);
-  // },
-  // installPackages: async (...pkgs: AptPackage[]) => {
-  //   if (!aptUpdated) {
-  //     aptUpdated = true;
-  //     await run(['sudo', 'apt', 'update']);
-  //   }
-  //   const pkgNames = pkgs.map(pkg => pkg.packageName);
-  //   await run(['sudo', 'apt', 'install', ...pkgNames]);
-  // },
-};
+  }
 
-export default {
-  softwarePackages: [],
-  packageManagers: [AptPackageManager],
-};
+  override async isPackageInstalled(pkg: AptPackage): Promise<boolean | undefined> {
+    try {
+      const result = await runPiped(['apt', '--installed', 'list', pkg.packageName]);
+      const outputPrefix = pkg.packageName + '/';
+      for (const line of result.stdout.split(platform.eol)) {
+        if (line.startsWith(outputPrefix)) {
+          return true;
+        }
+      }
+    } catch (_) {
+      // This is not fatal, just return undefined to indicate installation could not be verified.
+      return undefined;
+    }
+    return false;
+  }
+}

@@ -1,6 +1,6 @@
+import { Software } from '../api/package_types.ts';
 import { aptPackage } from '../managers/apt.ts';
 import { eoPackage } from '../managers/eopkg.ts';
-import { Software } from '../repository/framework.ts';
 
 export const BuildEssentialsSoftware: Software = {
   id: 'build_essentials',

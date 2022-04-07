@@ -40,3 +40,55 @@ export interface NamedArgs extends Record<string, any> {
   _: string[];
   $0: string;
 }
+
+export class KeyedSet<K, V> {
+  private readonly map = new Map<K, V>();
+
+  constructor(private readonly keyExtractor: (value: V) => K) {}
+  put(value: V): this {
+    const key = this.keyExtractor(value);
+    if (this.map.has(key)) {
+      throw new Error(`Key collision: ${key}`);
+    }
+    this.map.set(key, value);
+    return this;
+  }
+  get(key: K): V | undefined {
+    return this.map.get(key);
+  }
+  clear(): void {
+    this.map.clear();
+  }
+  deleteKey(key: K): boolean {
+    return this.map.delete(key);
+  }
+  deleteValue(value: V): boolean {
+    return this.map.delete(this.keyExtractor(value));
+  }
+  // deno-lint-ignore no-explicit-any
+  forEach(callbackfn: (value: V, key: K, set: Map<K, V>) => void, thisArg?: any): void {
+    this.map.forEach(callbackfn, thisArg);
+  }
+  hasKey(key: K): boolean {
+    return this.map.has(key);
+  }
+  hasValue(value: V): boolean {
+    return this.map.has(this.keyExtractor(value));
+  }
+  get size() {
+    return this.map.size;
+  }
+  entries(): IterableIterator<[K, V]> {
+    return this.map.entries();
+  }
+  keys(): IterableIterator<K> {
+    return this.map.keys();
+  }
+  values(): IterableIterator<V> {
+    return this.map.values();
+  }
+  [Symbol.iterator](): IterableIterator<[K, V]> {
+    return this.map.entries();
+  }
+  [Symbol.toStringTag]: string;
+}

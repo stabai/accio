@@ -1,8 +1,10 @@
-import { EoPackage } from '../repository/content.ts';
-import { PackageManager } from '../repository/framework.ts';
+import { MultiInstallPackageManager, SimpleManagedPackage } from '../api/package_types.ts';
 import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable, run, runPiped } from '../shell/run.ts';
-import { multiInstaller } from './index.ts';
+
+export interface EoPackage extends SimpleManagedPackage<'eopkg'> {
+  component?: boolean;
+}
 
 export function eoPackage(params: Omit<EoPackage, 'type' | 'platform' | 'managed'>): EoPackage {
   return {
@@ -13,9 +15,10 @@ export function eoPackage(params: Omit<EoPackage, 'type' | 'platform' | 'managed
   };
 }
 
-export const EoPackageManager: PackageManager<EoPackage> = {
-  name: 'eopkg',
-  getStatus: async () => {
+export class EoPackageManager extends MultiInstallPackageManager<'eopkg', EoPackage> {
+  override readonly name = 'eopkg';
+
+  protected override async checkStatus() {
     if (platform.platform !== 'linux') {
       return 'unsupported';
     } else if (await checkCommandAvailable('eopkg')) {
@@ -23,8 +26,9 @@ export const EoPackageManager: PackageManager<EoPackage> = {
     } else {
       return 'uninstalled';
     }
-  },
-  isPackageInstalled: async (pkg) => {
+  }
+
+  override async isPackageInstalled(pkg: EoPackage): Promise<boolean | undefined> {
     try {
       const result = await runPiped(['eopkg', 'list-installed', '--install-info', pkg.packageName]);
       const outputPrefix = pkg + '/';
@@ -34,17 +38,14 @@ export const EoPackageManager: PackageManager<EoPackage> = {
         }
       }
     } catch (_) {
-      // Fall through and return false to indicate installation could not be verified.
+      return undefined;
+      // This is not fatal, just return undefined to indicate installation could not be verified.
     }
     return false;
-  },
-  ...multiInstaller(async (...pkgs: EoPackage[]) => {
+  }
+
+  override async installPackages(...pkgs: EoPackage[]): Promise<void> {
     const pkgNames = pkgs.map((pkg) => pkg.packageName);
     await run(['sudo', 'eopkg', 'install', ...pkgNames]);
-  }),
-};
-
-export default {
-  softwarePackages: [],
-  packageManagers: [EoPackageManager],
-};
+  }
+}
