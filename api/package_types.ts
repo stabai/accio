@@ -9,6 +9,7 @@ export const ALL_SOFTWARE_IDS = [
   'snap',
   'tar',
   'wget',
+  'zsh',
 ] as const;
 
 export const MANUAL_PACKAGE_TYPES = [

@@ -11,6 +11,7 @@ import { GitSoftware } from './git.ts';
 import { KarabinerElementsSoftware } from './karabiner_elements.ts';
 import { TarSoftware } from './tar.ts';
 import { WgetSoftware } from './wget.ts';
+import { ZshSoftware } from './zsh.ts';
 
 export const ALL_SOFTWARE: SoftwareCatalog = {
   build_essentials: BuildEssentialsSoftware,
@@ -20,6 +21,7 @@ export const ALL_SOFTWARE: SoftwareCatalog = {
   snap: SnapSoftware,
   tar: TarSoftware,
   wget: WgetSoftware,
+  zsh: ZshSoftware,
 } as const;
 
 export async function getSoftware(filter: SoftwareFilter, softwareList?: string[]): Promise<Software[]> {
