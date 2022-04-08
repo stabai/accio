@@ -26,7 +26,8 @@ yargs(Deno.args)
         default: 'installed',
       });
   }, async (argv: NamedArgs) => {
-    const software = await getSoftware(argv.filter, argv.software);
+    const softwareList: string[] | undefined = argv.software?.length > 0 ? argv.software : undefined;
+    const software = await getSoftware(argv.filter, softwareList);
     const table = new Table()
       .header('ID', 'Name')
       .rows(...software.map((s) => [s.id, s.name]));
