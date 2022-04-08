@@ -4,11 +4,16 @@ import { KeyedSet } from './util_types.ts';
 export const ALL_SOFTWARE_IDS = [
   'build_essentials',
   'curl',
+  'discord',
   'git',
+  'iterm2',
   'karabiner_elements',
+  'slack',
   'snap',
   'tar',
+  'vscode',
   'wget',
+  'zoom',
   'zsh',
 ] as const;
 

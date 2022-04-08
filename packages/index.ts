@@ -7,20 +7,30 @@ import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable } from '../shell/run.ts';
 import { BuildEssentialsSoftware } from './build_essentials.ts';
 import { CurlSoftware } from './curl.ts';
+import { DiscordSoftware } from './discord.ts';
 import { GitSoftware } from './git.ts';
+import { ITermSoftware } from './iterm2.ts';
 import { KarabinerElementsSoftware } from './karabiner_elements.ts';
+import { SlackSoftware } from './slack.ts';
 import { TarSoftware } from './tar.ts';
+import { VsCodeSoftware } from './vscode.ts';
 import { WgetSoftware } from './wget.ts';
+import { ZoomSoftware } from './zoom.ts';
 import { ZshSoftware } from './zsh.ts';
 
 export const ALL_SOFTWARE: SoftwareCatalog = {
   build_essentials: BuildEssentialsSoftware,
   curl: CurlSoftware,
+  discord: DiscordSoftware,
   git: GitSoftware,
+  iterm2: ITermSoftware,
   karabiner_elements: KarabinerElementsSoftware,
+  slack: SlackSoftware,
   snap: SnapSoftware,
   tar: TarSoftware,
+  vscode: VsCodeSoftware,
   wget: WgetSoftware,
+  zoom: ZoomSoftware,
   zsh: ZshSoftware,
 } as const;
 

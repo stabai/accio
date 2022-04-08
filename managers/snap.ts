@@ -36,6 +36,15 @@ export const SnapSoftware: Software = {
 
 export type SnapPackage = SimpleManagedPackage<'snap'>;
 
+export function snapPackage(params: Omit<SnapPackage, 'type' | 'platform' | 'managed'>): SnapPackage {
+  return {
+    type: 'snap',
+    platform: ['linux'],
+    managed: true,
+    ...params,
+  };
+}
+
 export class SnapPackageManager extends MultiInstallPackageManager<'snap', SnapPackage> {
   override readonly name = 'snap';
   override readonly installPackageManager = SnapSoftware;
