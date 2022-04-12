@@ -1,3 +1,5 @@
+import { EOL } from 'https://deno.land/std@0.132.0/fs/eol.ts';
+
 export type PromiseRecord<T> = {
   [P in keyof T]: Promise<T[P]>;
 };
@@ -92,3 +94,9 @@ export class KeyedSet<K, V> {
   }
   [Symbol.toStringTag]: string;
 }
+
+export interface RawVersionInfo {
+  accioVersion: string;
+}
+
+export const EOL_CHAR = Deno.build.os === 'windows' ? EOL.CRLF : EOL.LF;

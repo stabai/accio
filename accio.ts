@@ -4,12 +4,12 @@ import yargs from 'https://deno.land/x/yargs@v17.3.1-deno/deno.ts';
 import { runInstall } from './accio-install.ts';
 import { SOFTWARE_FILTERS } from './api/package_types.ts';
 import { CommandYargs, NamedArgs } from './api/util_types.ts';
+import { getVersionInfo } from './api/versioning.ts';
 import { getSoftware } from './packages/index.ts';
 import { platform } from './shell/environment.ts';
 import { Table } from './ui/table.ts';
-import { APP_VERSION } from './version.ts';
 
-const VERSION_INFO = summarizeVersion(APP_VERSION);
+const VERSION_INFO = getVersionInfo(Deno.readTextFileSync('./version.json'));
 
 yargs(Deno.args)
   .scriptName('accio')
@@ -69,12 +69,3 @@ yargs(Deno.args)
   .demandCommand()
   .version(VERSION_INFO)
   .parse();
-
-function summarizeVersion(appVersion: string): string {
-  const parts = [`accio ${appVersion}`];
-  for (const key of Object.keys(Deno.version)) {
-    const version = Deno.version[key as keyof typeof Deno.version];
-    parts.push(key + ' ' + version);
-  }
-  return parts.join(platform.eol);
-}
