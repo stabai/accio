@@ -1,3 +1,5 @@
+export type ExtraRunOptions = Omit<Deno.RunOptions, 'cmd' | 'stdout' | 'stderr' | 'stdin'>;
+
 export interface PipedProcessResult {
   status: Deno.ProcessStatus;
   stdout: string;
@@ -17,23 +19,23 @@ export function shellEval(command: string): string[] {
   return [Deno.env.get('SHELL') ?? 'sh', '-c', command];
 }
 
-export async function checkCommandAvailable(cmd: string): Promise<boolean> {
-  return await tryRunPiped(shellEval(`command -v ${cmd}`));
+export async function checkCommandAvailable(cmd: string, extraOptions: ExtraRunOptions = {}): Promise<boolean> {
+  return await tryRunPiped(shellEval(`command -v ${cmd}`), extraOptions);
 }
 
-export function run(command: string[]): Promise<UnpipedProcessResult> {
-  const proc = Deno.run({ cmd: command });
+export function run(command: string[], extraOptions: ExtraRunOptions = {}): Promise<UnpipedProcessResult> {
+  const proc = Deno.run({ cmd: command, ...extraOptions });
   return finishUnpipedProcess(proc);
 }
 
-export function runPiped(command: string[]): Promise<PipedProcessResult> {
-  const proc = Deno.run({ cmd: command, stdout: 'piped', stderr: 'piped' });
+export function runPiped(command: string[], extraOptions: ExtraRunOptions = {}): Promise<PipedProcessResult> {
+  const proc = Deno.run({ cmd: command, stdout: 'piped', stderr: 'piped', ...extraOptions });
   return finishPipedProcess(proc);
 }
 
-export async function tryRunPiped(command: string[]): Promise<boolean> {
+export async function tryRunPiped(command: string[], extraOptions: ExtraRunOptions = {}): Promise<boolean> {
   try {
-    const proc = Deno.run({ cmd: command, stdout: 'piped', stderr: 'piped' });
+    const proc = Deno.run({ cmd: command, stdout: 'piped', stderr: 'piped', ...extraOptions });
     await finishPipedProcess(proc);
     return true;
   } catch (_) {
