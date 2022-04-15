@@ -33,10 +33,10 @@ const packageManagers: PackageManagerCatalog = {
   // npm: InstallSource<NpmPackage>;
   // rpm: InstallSource<RpmPackage>;
   // yum: InstallSource<YumPackage>;
-  // cargo: InstallSource<DnfPackage>;
+  // cargo: InstallSource<CargoPackage>;
   // dnf: InstallSource<DnfPackage>;
   // git: InstallSource<GitPackage>;
-  // pip: InstallSource<DnfPackage>;
+  // pip: InstallSource<PipPackage>;
   // zypper: InstallSource<ZypperPackage>;
   // If adding Windows:
   // choco: InstallSource<ChocoPackage>;
