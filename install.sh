@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# TODO(stabai): After there's been a real release, query the latest instead.
+current_version="v0.0.1"
+
 shrc_file="${HOME}/.bashrc"
 if [[ ${SHELL} == */zsh ]]; then
   shrc_file="${HOME}/.zshrc"
@@ -103,7 +106,7 @@ install_accio() {
   download_dir="$(ensure_download_dir)"
   file_basename="$(get_release_file_basename ${current_target})"
   file_url="$(get_release_url ${file_basename})"
-  local_tar_file="$(get_release_file_local_path ${file_basename})"
+  local_tar_file="${download_dir}/${file_basename}"
 
   echo
   echo "Downloading release archive..."
@@ -130,16 +133,15 @@ install_accio() {
 }
 
 get_release_url() {
-  # TODO(stabai): Point to release target from github.
-  echo "https://localhost/$1"
+  # TODO(stabai): After there's been a real release, query the latest here.
+  # current_version="$(curl -s https://api.github.com/repos/stabai/accio/releases/latest | grep tag_name | cut -d : -f 2,3 | tr -d \"\, | xargs)"
+  echo "https://github.com/stabai/accio/releases/download/${current_version}/$1"
 }
+
 get_release_file_basename() {
-  echo "$1.tar.gz"  
+  echo "accio-$1.tar.gz"
 }
-get_release_file_local_path() {
-  download_dir="$(xdg-user-dir DOWNLOAD)" 2>/dev/null || download_dir="${HOME}/Downloads"
-  echo "${download_dir}/$1"
-}
+
 ensure_download_dir() {
   download_dir="$(xdg-user-dir DOWNLOAD)" 2>/dev/null || download_dir="${HOME}/Downloads"
   mkdir -p "${download_dir}"
