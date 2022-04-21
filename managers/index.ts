@@ -24,19 +24,18 @@ const packageManagers: PackageManagerCatalog = {
   snap: new SnapPackageManager(),
   eopkg: new EoPackageManager(),
   // TODO(stabai):
-  // dpkg: InstallSource<DebPackage>;
-  // gem: InstallSource<GemPackage>;
-  // go: InstallSource<GoPackage>;
   // flatpak: InstallSource<FlatpakPackage>;
   // macports: InstallSource<MacportsPackage>;
-  // pacman: InstallSource<PacmanPackage>;
   // npm: InstallSource<NpmPackage>;
+  // go: InstallSource<GoPackage>;
+  // pip: InstallSource<PipPackage>;
+  // git: InstallSource<GitPackage>;
+  // gem: InstallSource<GemPackage>;
+  // pacman: InstallSource<PacmanPackage>;
   // rpm: InstallSource<RpmPackage>;
   // yum: InstallSource<YumPackage>;
   // cargo: InstallSource<CargoPackage>;
   // dnf: InstallSource<DnfPackage>;
-  // git: InstallSource<GitPackage>;
-  // pip: InstallSource<PipPackage>;
   // zypper: InstallSource<ZypperPackage>;
   // If adding Windows:
   // choco: InstallSource<ChocoPackage>;
