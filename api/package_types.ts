@@ -2,6 +2,7 @@ import { Platform } from './environment_types.ts';
 import { KeyedSet } from './util_types.ts';
 
 export const ALL_SOFTWARE_IDS = [
+  'brave_browser',
   'build_essentials',
   'curl',
   'discord',

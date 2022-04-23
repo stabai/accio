@@ -5,6 +5,7 @@ import { isInstalledWithPackageManager } from '../managers/index.ts';
 import { SnapSoftware } from '../managers/snap.ts';
 import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable } from '../shell/run.ts';
+import { BraveBrowserSoftware } from './brave.ts';
 import { BuildEssentialsSoftware } from './build_essentials.ts';
 import { CurlSoftware } from './curl.ts';
 import { DiscordSoftware } from './discord.ts';
@@ -19,6 +20,7 @@ import { ZoomSoftware } from './zoom.ts';
 import { ZshSoftware } from './zsh.ts';
 
 export const ALL_SOFTWARE: SoftwareCatalog = {
+  brave_browser: BraveBrowserSoftware,
   build_essentials: BuildEssentialsSoftware,
   curl: CurlSoftware,
   discord: DiscordSoftware,
