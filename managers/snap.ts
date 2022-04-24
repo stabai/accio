@@ -5,10 +5,11 @@ import {
   Software,
 } from '../api/package_types.ts';
 import { platform } from '../shell/environment.ts';
-import { checkCommandAvailable, runPiped, tryRunPiped } from '../shell/run.ts';
+import { checkCommandAvailable, runSudo, tryRunPiped } from '../shell/run.ts';
 import { aptPackage } from './apt.ts';
 import { eoPackage } from './eopkg.ts';
 
+// TODO(stabai): Use MultiInstallPackageManager (or alternative if multi-installs not possible)
 export const SnapSoftware: Software = {
   id: 'snap',
   name: 'Snap Package Manager',
@@ -26,8 +27,8 @@ export const SnapSoftware: Software = {
     //   platform: ['linux'],
     //   packageName: 'snapd',
     //   postInstall: async () => {
-    //     await runPiped(['sudo', 'systemctl', 'enable', '--now', 'snapd.socket']);
-    //     await runPiped(['sudo', 'ln', '-s', '/var/lib/snapd/snap', '/snap']);
+    //     await runPiped(['systemctl', 'enable', '--now', 'snapd.socket']);
+    //     await runPiped(['ln', '-s', '/var/lib/snapd/snap', '/snap']);
     //   },
     //   manualPostInstallStep: 'newDesktopSession',
     // },
@@ -36,11 +37,14 @@ export const SnapSoftware: Software = {
 
 export type SnapPackage = SimpleManagedPackage<'snap'>;
 
-export function snapPackage(params: Omit<SnapPackage, 'type' | 'platform' | 'managed'>): SnapPackage {
+type OmitKnownKeys<T> = Omit<T, 'type' | 'platform' | 'managed' | 'requiresRoot'>;
+
+export function snapPackage(params: OmitKnownKeys<SnapPackage>): SnapPackage {
   return {
     type: 'snap',
     platform: ['linux'],
     managed: true,
+    requiresRoot: true,
     ...params,
   };
 }
@@ -65,6 +69,6 @@ export class SnapPackageManager extends MultiInstallPackageManager<'snap', SnapP
 
   override async installPackages(...pkgs: SnapPackage[]): Promise<void> {
     const pkgNames = pkgs.map((pkg) => pkg.packageName);
-    await runPiped(['snap', 'install', ...pkgNames]);
+    await runSudo(['snap', 'install', ...pkgNames]);
   }
 }

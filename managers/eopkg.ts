@@ -1,16 +1,22 @@
 import { MultiInstallPackageManager, SimpleManagedPackage } from '../api/package_types.ts';
 import { platform } from '../shell/environment.ts';
-import { checkCommandAvailable, run, runPiped } from '../shell/run.ts';
+import { checkCommandAvailable, runPiped, runSudo } from '../shell/run.ts';
 
 export interface EoPackage extends SimpleManagedPackage<'eopkg'> {
+  managed: true;
+  requiresRoot: true;
+  platform: ['linux'];
   component?: boolean;
 }
 
-export function eoPackage(params: Omit<EoPackage, 'type' | 'platform' | 'managed'>): EoPackage {
+type OmitKnownKeys<T> = Omit<T, 'type' | 'platform' | 'managed' | 'requiresRoot'>;
+
+export function eoPackage(params: OmitKnownKeys<EoPackage>): EoPackage {
   return {
     type: 'eopkg',
     platform: ['linux'],
     managed: true,
+    requiresRoot: true,
     ...params,
   };
 }
@@ -46,6 +52,6 @@ export class EoPackageManager extends MultiInstallPackageManager<'eopkg', EoPack
 
   override async installPackages(...pkgs: EoPackage[]): Promise<void> {
     const pkgNames = pkgs.map((pkg) => pkg.packageName);
-    await run(['sudo', 'eopkg', 'install', ...pkgNames]);
+    await runSudo(['eopkg', 'install', ...pkgNames]);
   }
 }

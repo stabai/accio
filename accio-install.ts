@@ -24,10 +24,11 @@ export async function runInstall(options: InstallOptions): Promise<number | void
     return;
   }
 
-  const [actionSummary, errors] = summarizeInstall(installChoices, manualPostInstallStep);
+  const { actionSummary, errors, requiresSudo } = summarizeInstall(installChoices, manualPostInstallStep);
 
-  if (errors) {
-    console.error('Would install the following software, but some are unavailable:');
+  if (errors || requiresSudo) {
+    const state = errors ? 'are unavailable or require sudo' : 'require sudo';
+    console.error(`Would install the following software, but some ${state}:`);
     console.error(actionSummary);
     Deno.exit(1);
   }
@@ -101,16 +102,26 @@ async function chooseInstallPackages(
   return [installChoices, manualPostInstallStep];
 }
 
+interface InstallSummary {
+  actionSummary: string;
+  errors: boolean;
+  requiresSudo: boolean;
+}
+
 function summarizeInstall(
   installChoices: SoftwarePackageChoice[],
   manualPostInstallStep: ManualPostInstallStep | undefined,
-): [string, boolean] {
+): InstallSummary {
   let errors = false;
+  let requiresSudo = false;
   const tableRows = installChoices.map((sc) => {
     const pkg: CellContent = { value: sc.software.id, formatter: cyan };
     let src: CellContent;
     if (sc.package != null) {
       src = { value: getPackageTypeName(sc.package), formatter: magenta };
+    } else if (sc.ifRoot != null) {
+      requiresSudo = true;
+      src = { value: `${getPackageTypeName(sc.ifRoot)} (requires sudo)`, formatter: yellow };
     } else {
       errors = true;
       src = { value: 'unavailable', formatter: red };
@@ -122,5 +133,5 @@ function summarizeInstall(
     actionSummary += platform.eol + yellow(`⏸️  A ${manualPostInstallStep} will be required to complete installation.`);
     actionSummary += platform.eol + yellow(`   Rerun this installation after completing it.`);
   }
-  return [actionSummary, errors];
+  return { actionSummary, errors, requiresSudo };
 }

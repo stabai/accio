@@ -26,12 +26,13 @@ const packageManagers: PackageManagerCatalog = {
   // TODO(stabai):
   // flatpak: InstallSource<FlatpakPackage>;
   // macports: InstallSource<MacportsPackage>;
+  // pacman: InstallSource<PacmanPackage>;
+  // aur: InstallSource<AurPackage>;
   // npm: InstallSource<NpmPackage>;
   // go: InstallSource<GoPackage>;
   // pip: InstallSource<PipPackage>;
   // git: InstallSource<GitPackage>;
   // gem: InstallSource<GemPackage>;
-  // pacman: InstallSource<PacmanPackage>;
   // rpm: InstallSource<RpmPackage>;
   // yum: InstallSource<YumPackage>;
   // cargo: InstallSource<CargoPackage>;
@@ -85,6 +86,7 @@ export function supportsPackageCheck<T extends PackageType>(packageType: T): boo
 
 export function chooseInstallPackage(software: Software): SoftwarePackageChoice {
   let backup: SoftwarePackage | undefined;
+  let ifRoot: SoftwarePackage | undefined;
   for (const pkg of software.sources) {
     if (!pkg.platform.includes(platform.platform)) {
       continue;
@@ -92,11 +94,13 @@ export function chooseInstallPackage(software: Software): SoftwarePackageChoice 
     const mgr = getPackageManager(pkg.type);
     if (mgr.status !== 'ready') {
       continue;
+    } else if (pkg.requiresRoot && !platform.isRoot) {
+      ifRoot = pkg;
     } else if (pkg.managed && supportsMultiInstall(pkg.type)) {
-      return { software, package: pkg };
+      return { software, package: pkg, ifRoot };
     } else if (backup == null) {
       backup = pkg;
     }
   }
-  return { software, package: backup };
+  return { software, package: backup, ifRoot };
 }

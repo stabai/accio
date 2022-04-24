@@ -4,6 +4,7 @@ export type Platform = typeof Deno.build.os;
 
 export interface PlatformInfo {
   platform: Platform;
+  isRoot: boolean;
   homeDir: string;
   downloadDir: string;
   eol: EOL;

@@ -94,6 +94,7 @@ export interface SimpleManagedPackage<T extends PackageType> extends SoftwarePac
 export interface SoftwarePackage<T extends PackageType = PackageType> {
   type: T;
   subType?: string;
+  requiresRoot: boolean;
   managed: boolean;
   platform: Platform[];
   manualPostInstallStep?: ManualPostInstallStep;
@@ -118,6 +119,7 @@ export type SoftwareCatalog = {
 export interface SoftwarePackageChoice {
   software: Software;
   package: SoftwarePackage | undefined;
+  ifRoot: SoftwarePackage | undefined;
 }
 
 export interface SoftwareTypeGrouping<T extends PackageType = PackageType> {

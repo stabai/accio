@@ -8,6 +8,7 @@ export interface BrewFormula extends SoftwarePackage<'brew'> {
   type: 'brew';
   subType: 'formula';
   managed: true;
+  requiresRoot: false;
   platform: Platform[];
   formula: string;
 }
@@ -15,6 +16,7 @@ export interface BrewCask extends SoftwarePackage<'brew'> {
   type: 'brew';
   subType: 'cask';
   managed: true;
+  requiresRoot: false;
   platform: ['darwin'];
   cask: string;
 }
@@ -22,19 +24,26 @@ export type BrewPackage = (BrewFormula | BrewCask) & {
   platform: Platform[];
 };
 
-export function brewFormula(params: Omit<BrewFormula, 'type' | 'subType' | 'managed'>): BrewFormula {
+type KnownFormulaKeys = 'type' | 'subType' | 'managed' | 'requiresRoot';
+type KnownCaskKeys = KnownFormulaKeys | 'platform';
+
+type OmitKnownKeys<T, K extends string> = Omit<T, K>;
+
+export function brewFormula(params: OmitKnownKeys<BrewFormula, KnownFormulaKeys>): BrewFormula {
   return {
     type: 'brew',
     subType: 'formula',
     managed: true,
+    requiresRoot: false,
     ...params,
   };
 }
-export function brewCask(params: Omit<BrewCask, 'type' | 'subType' | 'managed' | 'platform'>): BrewCask {
+export function brewCask(params: OmitKnownKeys<BrewCask, KnownCaskKeys>): BrewCask {
   return {
     type: 'brew',
     subType: 'cask',
     managed: true,
+    requiresRoot: false,
     platform: ['darwin'],
     ...params,
   };

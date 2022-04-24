@@ -3,7 +3,7 @@ import { move } from 'https://deno.land/std@0.135.0/fs/mod.ts';
 import { basename, dirname, extname, join } from 'https://deno.land/std@0.135.0/path/mod.ts';
 
 import { PackageManager, PackageManagerStatus, SoftwarePackage } from '../api/package_types.ts';
-import { checkCommandAvailable, run } from '../shell/run.ts';
+import { checkCommandAvailable, run, runSudo } from '../shell/run.ts';
 import { platform } from '../shell/environment.ts';
 
 let checkInstall: boolean | undefined;
@@ -32,7 +32,7 @@ async function makeInstaller(extractedFolder: string): Promise<void> {
   await run(['./configure'], { cwd: extractedFolder });
   await run(['make'], { cwd: extractedFolder });
   const makeInstallCommand = await makeInstallPromise;
-  await run(['sudo', ...makeInstallCommand], { cwd: extractedFolder });
+  await runSudo([...makeInstallCommand], { cwd: extractedFolder });
 }
 
 async function copyToOptInstaller(extractedFolder: string): Promise<void> {
@@ -41,7 +41,7 @@ async function copyToOptInstaller(extractedFolder: string): Promise<void> {
   // const optFolder = join('/opt', basename(extractedFolder).toLowerCase());
   // await move(extractedFolder, optFolder);
 
-  await run(['sudo', 'mv', extractedFolder, '/opt']);
+  await runSudo(['mv', extractedFolder, '/opt']);
 
   // TODO(stabai): Add symbolic link: sudo ln -sf /opt/$DIR/$APP /usr/bin/$APP
   // TODO(stabai): Add to app menu icon: sudo cp -r /opt/$DIR/$APP.desktop /usr/share/applications

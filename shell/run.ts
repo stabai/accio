@@ -1,3 +1,5 @@
+import { platform } from './environment.ts';
+
 export type ExtraRunOptions = Omit<Deno.RunOptions, 'cmd' | 'stdout' | 'stderr' | 'stdin'>;
 
 export interface PipedProcessResult {
@@ -21,6 +23,14 @@ export function shellEval(command: string): string[] {
 
 export async function checkCommandAvailable(cmd: string, extraOptions: ExtraRunOptions = {}): Promise<boolean> {
   return await tryRunPiped(shellEval(`command -v ${cmd}`), extraOptions);
+}
+
+export function runSudo(command: string[], extraOptions: ExtraRunOptions = {}): Promise<UnpipedProcessResult> {
+  if (platform.isRoot) {
+    return run(command, extraOptions);
+  } else {
+    return run(['sudo', ...command], extraOptions);
+  }
 }
 
 export function run(command: string[], extraOptions: ExtraRunOptions = {}): Promise<UnpipedProcessResult> {
