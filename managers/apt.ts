@@ -1,3 +1,4 @@
+import { join } from 'https://deno.land/std@0.128.0/path/mod.ts';
 import { download } from 'https://deno.land/x/download@v1.0.1/mod.ts';
 import {
   MultiInstallPackageManager,
@@ -8,7 +9,24 @@ import {
 import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable, runPiped, runSudo } from '../shell/run.ts';
 
-let aptUpdated = false;
+// TODO(stabai): Add ability to add gpg+sources: https://brave.com/linux/#debian-9-ubuntu-1604-and-mint-18-2
+
+// TODO(stabai): Add ability to add ppa repos: https://github.com/golang/go/wiki/Ubuntu#using-ppa
+
+let aptNeedsUpdate = true;
+
+export interface PersonalPackageArchive {
+  ppaKey: string;
+}
+export interface SignedSourceList {
+  gpgKeyUrl: string;
+  arch?: 'amd64';
+  aptRepoUrl: string;
+  distribution: string;
+  component: string;
+  sourceListFileName: string;
+}
+export type AptSourceList = PersonalPackageArchive | SignedSourceList;
 
 export interface ManagedAptPackage extends SimpleManagedPackage<'apt'> {
   type: 'apt';
@@ -16,6 +34,7 @@ export interface ManagedAptPackage extends SimpleManagedPackage<'apt'> {
   managed: true;
   requiresRoot: true;
   platform: ['linux'];
+  requiredRepos?: AptSourceList[];
   packageName: string;
 }
 
@@ -90,10 +109,18 @@ export class AptPackageManager extends MultiInstallPackageManager<'apt', AptPack
   }
 
   override async installPackages(...pkgs: AptPackage[]): Promise<void> {
-    const anyManaged = pkgs.some((pkg) => pkg.subType === 'managed');
-    if (anyManaged && !aptUpdated) {
-      aptUpdated = true;
-      await runSudo(['apt', 'update']);
+    const managed = pkgs.filter((pkg) => pkg.subType === 'managed') as ManagedAptPackage[];
+    if (managed.length > 0) {
+      const requiredRepos = managed
+        .filter((pkg) => pkg.requiredRepos != null && pkg.requiredRepos.length > 0)
+        .map((pkg) => pkg.requiredRepos!).flat();
+      if (requiredRepos.length > 0) {
+        await installRepos(requiredRepos);
+      }
+      if (aptNeedsUpdate) {
+        await runSudo(['apt', 'update']);
+        aptNeedsUpdate = false;
+      }
     }
     const pkgKeys = await Promise.all(pkgs.map((pkg) => getPackageKey(pkg)));
     await runSudo(['apt', 'install', ...pkgKeys]);
@@ -121,4 +148,42 @@ async function getPackageKey(pkg: AptPackage): Promise<string> {
     case 'remote':
       return (await download(pkg.packageUrl)).fullPath;
   }
+}
+
+async function installRepos(repos: AptSourceList[]): Promise<void> {
+  const promises: Promise<unknown>[] = [];
+  const ppas: PersonalPackageArchive[] = [];
+
+  for (const repo of repos) {
+    if ('ppaKey' in repo) {
+      ppas.push(repo);
+    } else if ('gpgKeyUrl' in repo) {
+      promises.push(installSigned(repo));
+    }
+  }
+
+  if (ppas.length > 0) {
+    promises.push(installPpas(ppas));
+  }
+
+  if (promises.length === 0) {
+    return;
+  }
+  aptNeedsUpdate = true;
+  await Promise.all(promises);
+}
+
+async function installPpas(ppas: PersonalPackageArchive[]): Promise<void> {
+  const ppaKeys = ppas.map((ppa) => ppa.ppaKey);
+  await runSudo(['add-apt-repository', ...ppaKeys]);
+}
+
+async function installSigned(signed: SignedSourceList): Promise<void> {
+  const keyring = await download(signed.gpgKeyUrl, { dir: '/usr/share/keyrings' });
+  const sourceListPath = join('/etc/apt/sources.list.d', signed.sourceListFileName);
+  const archString = signed.arch == null ? '' : ` arch=${signed.arch}`;
+  await Deno.writeTextFile(
+    sourceListPath,
+    `deb [signed-by=${keyring.fullPath}${archString}] ${signed.aptRepoUrl} ${signed.distribution} ${signed.component}`,
+  );
 }

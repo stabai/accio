@@ -6,6 +6,6 @@ export const BazelSoftware: Software = {
   name: 'Bazel',
   sources: [
     brewFormula({ platform: ['linux', 'darwin'], formula: 'bazelisk' }),
-    // TODO(stabai): Add other install sources: https://docs.bazel.build/versions/main/install-bazelisk.html
+    // TODO(stabai): Add other install sources: https://bazel.build/install/bazelisk
   ],
 };

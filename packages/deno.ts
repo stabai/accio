@@ -7,13 +7,13 @@ export const DenoSoftware: Software = {
   id: 'deno',
   name: 'Deno',
   sources: [
-    brewFormula({ platform: ['linux', 'darwin'], formula: 'deno' }),
-    snapPackage({ packageName: 'deno' }),
     remoteInstallScript({
       platform: ['linux', 'darwin'],
       requiresRoot: false,
       scriptUrl: 'https://deno.land/x/install/install.sh',
     }),
+    snapPackage({ packageName: 'deno' }),
+    brewFormula({ platform: ['linux', 'darwin'], formula: 'deno' }),
     // TODO(stabai): Add other install sources: https://deno.land/#installation
   ],
 };
