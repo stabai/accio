@@ -24,8 +24,9 @@ print_success() {
 }
 
 install_accio() {
-  if [[ "$(id -u)" == "0" ]]; then
-    print_warning "Installing accio as root is discouraged."
+  uid="$(id -u)"
+  if [[ "${uid}" != "0" ]]; then
+    print_warning "Installing accio as root is strongly encouraged."
     read -p "Are you sure (y/n)? " confirm_root
     if ! [[ "${confirm_root}" =~ ^[Yy]$ ]]; then
       return 1
@@ -71,7 +72,11 @@ install_accio() {
   fi
 
   install_dir="$1"
-  if [[ "${install_dir}" == "" ]]; then
+  if [[ "$1" != "" ]]; then
+    install_dir="$1"
+  elif [[ "${uid}" == "0" ]]; then
+    install_dir="/usr/local/bin"
+  else
     install_dir="${HOME}/bin"
   fi
 
