@@ -11,6 +11,26 @@ export interface LocalInstallScript extends SoftwarePackage<'script'> {
 }
 export type InstallScript = RemoteInstallScript | LocalInstallScript;
 
+type OmitKnownKeys<T> = Omit<T, 'type' | 'subType' | 'managed'>;
+
+export function remoteInstallScript(params: OmitKnownKeys<RemoteInstallScript>): RemoteInstallScript {
+  return {
+    type: 'script',
+    subType: 'remote',
+    managed: false,
+    ...params,
+  };
+}
+
+export function localInstallScript(params: OmitKnownKeys<LocalInstallScript>): LocalInstallScript {
+  return {
+    type: 'script',
+    subType: 'local',
+    managed: false,
+    ...params,
+  };
+}
+
 export class ScriptInstaller extends PackageManager<'script', InstallScript> {
   override readonly name = 'script';
 

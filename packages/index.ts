@@ -5,33 +5,53 @@ import { isInstalledWithPackageManager } from '../managers/index.ts';
 import { SnapSoftware } from '../managers/snap.ts';
 import { platform } from '../shell/environment.ts';
 import { checkCommandAvailable } from '../shell/run.ts';
+import { BazelSoftware } from './bazel.ts';
 import { BraveBrowserSoftware } from './brave.ts';
+import { BufSoftware } from './buf.ts';
 import { BuildEssentialsSoftware } from './build_essentials.ts';
 import { CurlSoftware } from './curl.ts';
+import { DenoSoftware } from './deno.ts';
 import { DiscordSoftware } from './discord.ts';
 import { GitSoftware } from './git.ts';
+import { GoSoftware } from './go.ts';
 import { ITermSoftware } from './iterm2.ts';
+import { JqSoftware } from './jq.ts';
 import { KarabinerElementsSoftware } from './karabiner_elements.ts';
+import { KubectlSoftware } from './kubectl.ts';
+import { MinikubeSoftware } from './minikube.ts';
+import { NodeSoftware } from './node.ts';
+import { PythonSoftware } from './python.ts';
 import { SlackSoftware } from './slack.ts';
 import { TarSoftware } from './tar.ts';
 import { VsCodeSoftware } from './vscode.ts';
 import { WgetSoftware } from './wget.ts';
+import { YqSoftware } from './yq.ts';
 import { ZoomSoftware } from './zoom.ts';
 import { ZshSoftware } from './zsh.ts';
 
 export const ALL_SOFTWARE: SoftwareCatalog = {
+  bazel: BazelSoftware,
   brave_browser: BraveBrowserSoftware,
+  buf: BufSoftware,
   build_essentials: BuildEssentialsSoftware,
   curl: CurlSoftware,
+  deno: DenoSoftware,
   discord: DiscordSoftware,
   git: GitSoftware,
+  go: GoSoftware,
   iterm2: ITermSoftware,
+  jq: JqSoftware,
   karabiner_elements: KarabinerElementsSoftware,
+  kubectl: KubectlSoftware,
+  minikube: MinikubeSoftware,
+  node: NodeSoftware,
+  python: PythonSoftware,
   slack: SlackSoftware,
   snap: SnapSoftware,
   tar: TarSoftware,
   vscode: VsCodeSoftware,
   wget: WgetSoftware,
+  yq: YqSoftware,
   zoom: ZoomSoftware,
   zsh: ZshSoftware,
 } as const;

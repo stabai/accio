@@ -35,7 +35,9 @@ export const SnapSoftware: Software = {
   ],
 };
 
-export type SnapPackage = SimpleManagedPackage<'snap'>;
+export interface SnapPackage extends SimpleManagedPackage<'snap'> {
+  useClassicMode?: boolean;
+}
 
 type OmitKnownKeys<T> = Omit<T, 'type' | 'platform' | 'managed' | 'requiresRoot'>;
 
@@ -68,7 +70,15 @@ export class SnapPackageManager extends MultiInstallPackageManager<'snap', SnapP
   }
 
   override async installPackages(...pkgs: SnapPackage[]): Promise<void> {
-    const pkgNames = pkgs.map((pkg) => pkg.packageName);
-    await runSudo(['snap', 'install', ...pkgNames]);
+    const normalPkgNames = pkgs.filter((pkg) => pkg.useClassicMode !== true).map((pkg) => pkg.packageName);
+    const classicPkgNames = pkgs.filter((pkg) => pkg.useClassicMode === true).map((pkg) => pkg.packageName);
+    const promises: Promise<unknown>[] = [];
+    if (normalPkgNames.length > 0) {
+      promises.push(runSudo(['snap', 'install', ...normalPkgNames]));
+    }
+    if (classicPkgNames.length > 0) {
+      promises.push(runSudo(['snap', 'install', '--classic', ...classicPkgNames]));
+    }
+    await Promise.all(promises);
   }
 }

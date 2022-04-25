@@ -2,18 +2,28 @@ import { Platform } from './environment_types.ts';
 import { KeyedSet } from './util_types.ts';
 
 export const ALL_SOFTWARE_IDS = [
+  'bazel',
   'brave_browser',
+  'buf',
   'build_essentials',
   'curl',
+  'deno',
   'discord',
   'git',
+  'go',
   'iterm2',
+  'jq',
   'karabiner_elements',
+  'kubectl',
+  'minikube',
+  'node',
+  'python',
   'slack',
   'snap',
   'tar',
   'vscode',
   'wget',
+  'yq',
   'zoom',
   'zsh',
 ] as const;
