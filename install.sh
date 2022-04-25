@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # TODO(stabai): After there's been a real release, query the latest instead.
-current_version="v0.0.1"
+current_version="v0.0.2"
 
 shrc_file="${HOME}/.bashrc"
 if [[ ${SHELL} == */zsh ]]; then
